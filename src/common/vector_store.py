@@ -118,11 +118,15 @@ class VectorStore:
         """
         Runs an ANN lookup against the deployed index endpoint.
         """
-        response = self.endpoint.find_neighbors(
-            deployed_index_id=self.deployed_index_id,
-            queries=[query_embedding],
-            num_neighbors=top_k,
-        )
+        try:
+            response = self.endpoint.find_neighbors(
+                deployed_index_id=self.deployed_index_id,
+                queries=[query_embedding],
+                num_neighbors=top_k,
+            )
+        except:
+            # manually setting domain name
+            self.endpoint._public_match_client = self.endpoint.public_endpoint_domain_name 
 
         # Only one query, so response is a single MatchResponse.
         matches = response[0].neighbors
