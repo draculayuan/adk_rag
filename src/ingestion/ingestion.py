@@ -21,10 +21,10 @@ try:
 except ImportError:
     vision = None
 
-from ..common.vector_store import VectorStore
-from ..common.config import settings
-from ..common.processor import DocumentProcessor
-from ..common.embedding_generator import EmbeddingGenerator
+from common.vector_store import VectorStore
+from common.config import settings
+from common.processor import DocumentProcessor
+from common.embedding_generator import EmbeddingGenerator
 
 # Configure logging
 logging.basicConfig(
