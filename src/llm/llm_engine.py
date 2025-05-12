@@ -1,6 +1,6 @@
 from typing import List, Dict, Any
 from google.cloud import aiplatform
-from ..config import settings
+from config import settings
 
 class LLMEngine:
     def __init__(self):

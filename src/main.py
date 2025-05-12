@@ -48,7 +48,7 @@ async def upload_document(file: UploadFile = File(...)):
         # Generate embeddings
         chunks_with_embeddings = embedding_generator.generate_embeddings(chunks)
         
-        # Store in vector database
+        # Store in vector database - it should create a new index & deploy to endpoint if not already created
         vector_store.upsert_vectors(chunks_with_embeddings)
         
         # Clean up

@@ -3,7 +3,7 @@ import PyPDF2
 from docx import Document
 import markdown
 import os
-from ..config import settings
+from config import settings
 
 class DocumentProcessor:
     def __init__(self):

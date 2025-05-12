@@ -1,21 +1,24 @@
 from typing import List, Dict, Any
 from google.cloud import aiplatform
-from ..config import settings
+from vertexai.language_models import TextEmbeddingModel
+from config import settings
 
 class EmbeddingGenerator:
     def __init__(self):
-        self.project = settings.GOOGLE_CLOUD_PROJECT
-        self.location = settings.VERTEX_AI_LOCATION
+        #self.project = settings.GOOGLE_CLOUD_PROJECT
+        #self.location = settings.VERTEX_AI_LOCATION
         self.model = settings.EMBEDDING_MODEL
         
+        """
         # Initialize Vertex AI
         aiplatform.init(
             project=self.project,
             location=self.location
         )
+        """
         
         # Initialize the embedding model
-        self.embedding_model = aiplatform.TextEmbeddingModel.from_pretrained(self.model)
+        self.embedding_model = TextEmbeddingModel.from_pretrained(self.model)
 
     def generate_embeddings(self, chunks: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Generate embeddings for text chunks."""
