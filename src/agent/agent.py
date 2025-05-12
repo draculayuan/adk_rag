@@ -1,46 +1,27 @@
-from typing import List, Dict, Any
-from google.cloud import aiplatform
-from vertexai.preview.agents import Agent, AgentConfig
-from vertexai.preview.agents.tools import Tool
-from ..config import settings
+from google.adk.agents import LlmAgent
+from vertexai.preview.reasoning_engines import AdkApp
 
-class KnowledgeAgent:
-    def __init__(self):
-        # Initialize Vertex AI
-        aiplatform.init(
-            project=settings.GOOGLE_CLOUD_PROJECT,
-            location=settings.VERTEX_AI_LOCATION
-        )
-        
-        # Create agent configuration
-        self.config = AgentConfig(
-            name="cymbal_knowledge_agent",
-            description="An agent that helps employees find information about company policies and documents",
-            tools=self._create_tools()
-        )
-        
-        # Initialize the agent
-        self.agent = Agent(config=self.config)
+# Import your retrieval tools
+from .tools.retrieve import retrieve_documents
 
-    def _create_tools(self) -> List[Tool]:
-        """Create tools for the agent."""
-        return [
-            Tool(
-                name="search_knowledge_base",
-                description="Search through company knowledge base for relevant information",
-                function=self._search_knowledge_base
-            )
-        ]
+# Define the RAG agent using ADK
+rag_agent = LlmAgent(
+    name="cymbal_knowledge_agent",
+    model="gemini-2.0-flash-001",
+    description="Company knowledge assistant that can ingest new files on demand and answer based on our internal documents.",
+    instruction=(
+        "You are a corporate knowledge assistant. "
+        "For any question, always call `retrieve_documents(question)` first to fetch relevant context before answering."
+    ),
+    tools=[retrieve_documents],
+)
 
-    def _search_knowledge_base(self, query: str) -> List[Dict[str, Any]]:
-        """Search the knowledge base using Vertex AI Vector Search."""
-        # This will be handled by Vertex AI Agent Engine's built-in vector search
-        pass
+# Wrap the agent in an AdkApp for deployment
+app = AdkApp(agent=rag_agent)
 
-    def process_query(self, query: str) -> Dict[str, Any]:
-        """Process a user query using the agent."""
-        response = self.agent.run(query)
-        return {
-            "answer": response.text,
-            "sources": response.sources
-        } 
+# quick test
+for event in app.stream_query(
+    user_id="USER_ID",
+    message="What is the exchange rate from US dollars to SEK today?",
+):
+    print(event)

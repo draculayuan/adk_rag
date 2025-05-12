@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     
     # LLM settings
     LLM_MODEL: str = os.getenv("LLM_MODEL", "gemini-pro")
-    EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL", "textembedding-gecko@latest")
+    EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL", "text-embedding-005")
     
     # Document processing settings
     CHUNK_SIZE: int = 1000

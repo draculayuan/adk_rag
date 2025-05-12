@@ -1,7 +1,7 @@
 from typing import List, Dict, Any
 from google.cloud import aiplatform
 from vertexai.language_models import TextEmbeddingModel
-from config import settings
+from .config import settings
 
 class EmbeddingGenerator:
     def __init__(self):

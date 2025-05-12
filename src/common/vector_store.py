@@ -8,18 +8,10 @@ from google.cloud.aiplatform.matching_engine import (
     MatchingEngineIndexEndpoint,
 )
 
-from config import settings
+from .config import settings
 
 
 class VectorStore:
-    """
-    Thin wrapper around Vertex AI Vector Search that covers the full life-cycle:
-
-    1.  Create (or reuse) a Matching Engine *Index*         → ingestion layer
-    2.  Deploy that Index to a Matching Engine *Endpoint*   → online search layer
-    3.  CRUD helpers for datapoints (upsert / delete) and ANN search
-    """
-
     def __init__(self):
         aiplatform.init(
             project=settings.GOOGLE_CLOUD_PROJECT,
@@ -126,7 +118,7 @@ class VectorStore:
         """
         Runs an ANN lookup against the deployed index endpoint.
         """
-        response = self.endpoint.match(
+        response = self.endpoint.find_neighbors(
             deployed_index_id=self.deployed_index_id,
             queries=[query_embedding],
             num_neighbors=top_k,
