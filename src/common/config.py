@@ -19,7 +19,8 @@ class Settings(BaseSettings):
     VECTOR_SEARCH_INDEX_ID: str = os.getenv("VECTOR_SEARCH_INDEX_ID", "")
     INDEX_DISPLAY_NAME: str = os.getenv("INDEX_DISPLAY_NAME", "")
     ENDPOINT_DISPLAY_NAME: str = os.getenv("ENDPOINT_DISPLAY_NAME", "")
-    EMBEDDING_DIM: int = 128
+    ENDPOINT_ID: str = os.getenv("ENDPOINT_ID", "")
+    EMBEDDING_DIM: int = 768
     
     # LLM settings
     LLM_MODEL: str = os.getenv("LLM_MODEL", "gemini-pro")

@@ -7,6 +7,8 @@ from google.cloud.aiplatform.matching_engine import (
     MatchingEngineIndex,
     MatchingEngineIndexEndpoint,
 )
+from google.cloud.aiplatform_v1.types import IndexDatapoint
+from google.cloud import firestore
 
 from .config import settings
 
@@ -20,6 +22,9 @@ class VectorStore:
 
         self._embedding_dim = settings.EMBEDDING_DIM
         #self._distance_measure_type = distance_measure_type
+        
+        # for storing metadata and text mapping
+        self.db = firestore.Client()
 
         # Index (create if it does not exist)
         self.index = self._get_or_create_index(
@@ -27,7 +32,7 @@ class VectorStore:
         )
 
         # Endpoint (create / deploy if needed)
-        self.endpoint = self._get_or_create_endpoint(settings.ENDPOINT_DISPLAY_NAME)
+        self.endpoint = self._get_or_create_endpoint(settings.ENDPOINT_ID)
         self.deployed_index_id = (
             self._get_or_deploy_index_to_endpoint(self.endpoint)
         )
@@ -52,20 +57,19 @@ class VectorStore:
         )
 
     def _get_or_create_endpoint(
-        self, display_name: str
+        self, endpoint_id: str
     ) -> MatchingEngineIndexEndpoint:
         """Returns an index endpoint; creates one if necessary."""
-        eps = MatchingEngineIndexEndpoint.list(
-            filter=f'display_name="{display_name}"'
-        )
-
-        if eps:
-            return eps[0]
-
-        return MatchingEngineIndexEndpoint.create(
-            display_name=display_name,
-            public_endpoint_enabled=True
-        )
+        try:
+            endpoint = aiplatform.MatchingEngineIndexEndpoint(
+                    index_endpoint_name=endpoint_id
+                )
+            return endpoint
+        except:
+            return MatchingEngineIndexEndpoint.create(
+                display_name=display_name,
+                public_endpoint_enabled=True
+            )
 
     def _get_or_deploy_index_to_endpoint(
         self, endpoint: MatchingEngineIndexEndpoint
@@ -83,26 +87,29 @@ class VectorStore:
         )
         return deployed_index_id
 
-    def upsert_vectors(self, vectors: List[Dict[str, Any]]) -> None:
-        """
-        vectors: List of dicts each with keys → "embedding": List[float],
-                                                "metadata":  Dict[str, Any]
-        The ID convention below (`fileName_chunkIdx`) is only an example.
-        """
-        ids = [
-            f"{v['metadata'].get('file_name','file')}_{v['metadata'].get('chunk_index',0)}"
-            for v in vectors
-        ]
-        embeddings = [v["embedding"] for v in vectors]
-        metadata = [v["metadata"] for v in vectors]
+    def upsert_vectors(self, data, collection="rag") -> None:
+        datapoints = [IndexDatapoint(
+            datapoint_id=str(i), 
+            feature_vector=e['embedding']) for i, e in enumerate(data)]
 
         # `upsert_datapoints` (Vertex AI 2.15+)
         self.index.upsert_datapoints(
-            ids=ids,
-            feature_vectors=embeddings,
-            namespace="default",
-            metadata=metadata,
+            datapoints = datapoints
         )
+        
+        # update db
+        for item in data:
+            text = item['text']
+            metadata = item['metadata']
+            idx = metadata['chunk_index']
+            file_name = metadata['file_name']
+            source = metadata['source']
+            doc_ref = self.db.collection(collection).document(str(idx))
+            doc_ref.set({
+                "file_path": source,
+                "file_name": file_name,
+                "text": item["text"]
+            })
 
     def delete_vectors(self, vector_ids: List[str]) -> None:
         self.index.remove_datapoints(ids=vector_ids, namespace="default")
@@ -112,37 +119,35 @@ class VectorStore:
     def search_vectors(
         self,
         query_embedding: List[float],
-        top_k: int = 5,
-        return_full_metadata: bool = False,
+        top_k: int = 3,
+        collection="rag",
     ) -> List[Dict[str, Any]]:
         """
         Runs an ANN lookup against the deployed index endpoint.
         """
-        try:
-            response = self.endpoint.find_neighbors(
-                deployed_index_id=self.deployed_index_id,
-                queries=[query_embedding],
-                num_neighbors=top_k,
-            )
-        except:
-            # manually setting domain name
-            self.endpoint._public_match_client = self.endpoint.public_endpoint_domain_name 
+        response = self.endpoint.find_neighbors(
+            deployed_index_id=self.deployed_index_id,
+            queries=[query_embedding],
+            num_neighbors=top_k,
+        )
 
         # Only one query, so response is a single MatchResponse.
-        matches = response[0].neighbors
-
-        results = []
-        for m in matches:
-            result_md = m.metadata if return_full_metadata else {
-                k: m.metadata.get(k)
-                for k in ("text", "file_name", "chunk_index")
-                if k in m.metadata
-            }
-            results.append(
-                {
-                    "id": m.id,
-                    "distance": m.distance,
-                    "metadata": result_md,
-                }
-            )
-        return results
+        try:
+            retrieved_results = []
+            for response_ in response[0]:
+                r = response_.id
+                r = self.db.collection(collection).document(r).get().to_dict()
+                retrieved_results.append(
+                    {
+                        'text': r['text'],
+                        'file_name': r['file_name'],
+                        'file_path': r['file_path']
+                    }
+                )
+        except:
+            retrieved_results = [{
+                "text": "", 
+                'file_name': "",
+                'file_path': ""
+            }]
+        return retrieved_results
