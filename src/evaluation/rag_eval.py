@@ -32,6 +32,12 @@ AVAILABLE_METRICS = {
     "answer_correctness": answer_correctness,
 }
 
+# Metrics that require ground truth
+GROUND_TRUTH_METRICS = {
+    "context_recall",
+    "answer_correctness"
+}
+
 def call_agent(query: str) -> tuple[str, list[str]]:
     """
     Call the agent with a query and return the response and contexts.
@@ -77,22 +83,39 @@ def run_rag(q: str) -> tuple[str, list[str]]:
             continue
     return answer, contexts
 
-def load_test_data(file_path: str) -> List[Dict[str, str]]:
+def load_test_data(file_path: str, question_col: str = "question", answer_col: str = "answer", require_answer: bool = False) -> List[Dict[str, str]]:
     """
     Load test data from a CSV file.
     
     Args:
         file_path (str): Path to the CSV file
+        question_col (str): Name of the column containing questions
+        answer_col (str): Name of the column containing ground truth answers
+        require_answer (bool): Whether the answer column is required
         
     Returns:
         List[Dict[str, str]]: List of test samples
     """
     try:
         test_data = pd.read_csv(file_path)
-        return [
-            {"question": row["question"], "ground_truth": row["answer"]}
-            for _, row in test_data.iterrows()
-        ]
+        
+        # Validate question column exists
+        if question_col not in test_data.columns:
+            raise ValueError(f"Missing required column '{question_col}' in CSV. Available columns: {list(test_data.columns)}")
+        
+        # Validate answer column if required
+        if require_answer and answer_col not in test_data.columns:
+            raise ValueError(f"Selected metrics require ground truth answers. Missing column '{answer_col}' in CSV. Available columns: {list(test_data.columns)}")
+        
+        # Create test samples
+        samples = []
+        for _, row in test_data.iterrows():
+            sample = {"question": row[question_col]}
+            if answer_col in test_data.columns:
+                sample["ground_truth"] = row[answer_col]
+            samples.append(sample)
+        
+        return samples
     except Exception as e:
         print(f"Error loading test data: {str(e)}")
         sys.exit(1)
@@ -123,6 +146,19 @@ def get_selected_metrics(metric_names: Optional[List[str]] = None) -> List[Any]:
     
     return selected_metrics
 
+def requires_ground_truth(metrics: List[Any]) -> bool:
+    """
+    Check if any of the selected metrics require ground truth.
+    
+    Args:
+        metrics (List[Any]): List of metric functions
+        
+    Returns:
+        bool: True if any metric requires ground truth
+    """
+    metric_names = [name for name, func in AVAILABLE_METRICS.items() if func in metrics]
+    return any(name in GROUND_TRUTH_METRICS for name in metric_names)
+
 def main():
     parser = argparse.ArgumentParser(description="RAG Evaluation Script")
     parser.add_argument("--test_data", type=str, required=True,
@@ -130,24 +166,34 @@ def main():
     parser.add_argument("--metrics", type=str, nargs="+",
                       help="List of metrics to use (default: all available metrics)",
                       choices=list(AVAILABLE_METRICS.keys()))
+    parser.add_argument("--question_col", type=str, default="question",
+                      help="Name of the column containing questions in the CSV (default: 'question')")
+    parser.add_argument("--answer_col", type=str, default="answer",
+                      help="Name of the column containing ground truth answers in the CSV (default: 'answer')")
     
     args = parser.parse_args()
     
+    # Get selected metrics
+    selected_metrics = get_selected_metrics(args.metrics)
+    
+    # Check if ground truth is required
+    needs_ground_truth = requires_ground_truth(selected_metrics)
+    
     # Load test data
-    TEST_SET = load_test_data(args.test_data)
+    TEST_SET = load_test_data(args.test_data, args.question_col, args.answer_col, needs_ground_truth)
     
     # Process each test sample
     records = []
     for sample in TEST_SET:
         ans, ctxs = run_rag(sample["question"])
-        records.append(
-            {
-                "question": sample["question"],
-                "answer": ans,
-                "contexts": ctxs,
-                "ground_truth": sample["ground_truth"],
-            }
-        )
+        record = {
+            "question": sample["question"],
+            "answer": ans,
+            "contexts": ctxs,
+        }
+        if "ground_truth" in sample:
+            record["ground_truth"] = sample["ground_truth"]
+        records.append(record)
 
     eval_ds = Dataset.from_list(records)
 
@@ -164,9 +210,6 @@ def main():
         model_name="text-embedding-005"
     )
     embedder = LangchainEmbeddingsWrapper(lc_embed)
-
-    # Get selected metrics
-    selected_metrics = get_selected_metrics(args.metrics)
 
     # Run evaluation
     results = evaluate(
