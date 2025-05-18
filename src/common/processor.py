@@ -21,6 +21,7 @@ class DocumentProcessor:
 
     def process_document(self, root_path: str) -> List[Dict[str, Any]]:
         """Process a document and return chunks with metadata."""
+        print("Processing data...")
         if not os.path.exists(root_path):
             raise FileNotFoundError(f"File not found: {file_path}")
             

@@ -88,6 +88,7 @@ class VectorStore:
         return deployed_index_id
 
     def upsert_vectors(self, data, collection="rag") -> None:
+        print("Updating index...")
         datapoints = [IndexDatapoint(
             datapoint_id=str(i), 
             feature_vector=e['embedding']) for i, e in enumerate(data)]

@@ -7,8 +7,8 @@ import vertexai
 app = Flask(__name__)
 
 # Initialize the agent engine
-agent_engine = vertexai.agent_engines.get('projects/163097687798/locations/us-central1/reasoningEngines/2227531393036976128')
-session = agent_engine.get_session(user_id="yuan", session_id='5569172079976120320')
+agent_engine = vertexai.agent_engines.get('projects/163097687798/locations/us-central1/reasoningEngines/8537074470983041024')
+session = agent_engine.create_session(user_id="test_user")
 
 @app.route('/')
 def home():
