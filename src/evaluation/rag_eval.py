@@ -15,6 +15,7 @@ import argparse
 import sys
 from typing import List, Dict, Any, Optional
 import vertexai
+from vertexai import agent_engines
 
 # Initialize the agent engine
 agent_engine = vertexai.agent_engines.get(
