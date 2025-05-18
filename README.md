@@ -108,7 +108,34 @@ The service will be available at `http://localhost:8000`
 
 ## Evaluation
 
-The system includes an evaluation framework with sample queries in `src/evaluation/sample_queries.json`. These queries can be used to test the system's performance and accuracy.
+The system includes a comprehensive evaluation framework using the `rag_eval.py` script, which leverages the Ragas library to assess the quality of the RAG system. The evaluation metrics include:
+
+- **Faithfulness**: Measures if the generated answer is supported by the retrieved context
+- **Answer Relevancy**: Evaluates how relevant the answer is to the question
+- **Context Recall**: Measures how well the retrieved context covers the ground truth
+- **Context Precision**: Assesses the precision of the retrieved context
+- **Answer Correctness**: Evaluates the correctness of the answer against ground truth
+
+### Running Evaluations
+
+To evaluate the system, prepare a CSV file with test questions and optional ground truth answers (If you choose a metric requiring ground truth, then ground truth must be provided in the file). Then run:
+
+```bash
+python rag_eval.py --test_data path/to/test_data.csv [--metrics metric1 metric2] [--question_col column_name] [--answer_col column_name]
+```
+
+Arguments:
+- `--test_data`: Path to CSV file containing test data (required)
+- `--metrics`: List of metrics to evaluate (optional, defaults to all metrics)
+- `--question_col`: Name of the question column in CSV (default: "question")
+- `--answer_col`: Name of the ground truth answer column in CSV (default: "answer")
+
+Example:
+```bash
+python rag_eval.py --test_data test_queries.csv --metrics faithfulness answer_relevancy
+```
+
+The script will output detailed evaluation results for each metric, helping you assess and improve the system's performance.
 
 ## Updating Index
 
