@@ -26,7 +26,7 @@ def chat():
 
     response_text = ""
     for event in agent_engine.stream_query(
-        user_id="yuan", session_id=session["id"], message=query
+        user_id="test_user", session_id=session["id"], message=query
     ):
         text = event["content"]["parts"][0].get("text", None)
         role = event["content"]["role"]
