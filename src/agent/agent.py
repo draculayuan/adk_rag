@@ -10,7 +10,7 @@ rag_agent = LlmAgent(
     model="gemini-2.0-flash",
     description="An Agent that can provide answer to user questions based on retrieved context",
     instruction=(
-        "You are an question answering agent who will answer user's question by retrieving knowledge from the knowledge base by running 'retrieve_documents(query)' function"
+        "You are an question answering agent who will answer user's question by retrieving knowledge from the knowledge base by running 'retrieve_documents(query)' function; Please strictly answer user's question based on the knowledge, and remember to cite the source of the knowledge."
     ),
     tools=[retrieve_documents],
 )
