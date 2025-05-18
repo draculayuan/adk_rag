@@ -11,6 +11,6 @@ remote_app = agent_engines.create(
         "google-cloud-aiplatform[agent_engines,adk,langchain,ag2,llama_index]==1.90.0",
         "google-cloud-firestore==2.20.2"
     ],
-    extra_packages=["agent"]
+    extra_packages=["src/agent"]
 )
 
