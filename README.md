@@ -15,12 +15,119 @@ The system uses the following components:
 
 ### RAG Implementation
 
+The system implements RAG (Retrieval-Augmented Generation) using:
+- Document chunking and embedding generation
+- Vector similarity search using Vertex AI Vector Search
+- Context-aware response generation using Vertex AI Gemini
+- Source citation and reference tracking
+
 ## Setup and Installation
+
+1. **Prerequisites**:
+   - Python 3.8+
+   - Google Cloud Platform account with Vertex AI API enabled
+   - Google Cloud credentials configured
+
+2. **Environment Setup**:
+   ```bash
+   # Create and activate virtual environment
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   
+   # Install dependencies
+   pip install -r requirements.txt
+   ```
+
+3. **Configuration**:
+   Create a `.env` file with the following variables:
+   ```
+   GOOGLE_CLOUD_PROJECT=your-project-id
+   GOOGLE_APPLICATION_CREDENTIALS=path/to/credentials.json
+   VERTEX_AI_LOCATION=us-central1
+   VERTEX_AI_ENDPOINT=your-endpoint-id
+   VECTOR_SEARCH_INDEX_ENDPOINT=your-index-endpoint
+   VECTOR_SEARCH_INDEX_ID=your-index-id
+   INDEX_DISPLAY_NAME=your-index-name
+   ENDPOINT_DISPLAY_NAME=your-endpoint-name
+   ENDPOINT_ID=your-endpoint-id
+   STAGING_BUCKET=gs://your-bucket
+   ```
 
 ## Project Structure
 
+```
+.
+├── data_ingestion.py          # Document ingestion and index management
+├── deploy_agent.py           # Agent deployment to Vertex AI
+├── web_chatbot.py           # Web interface for the chatbot
+├── src/
+│   ├── agent/               # Agent implementation
+│   │   ├── agent.py        # RAG agent definition
+│   │   └── tools/          # Agent tools
+│   ├── common/             # Shared utilities
+│   │   ├── config.py       # Configuration management
+│   │   ├── processor.py    # Document processing
+│   │   ├── embedding_generator.py  # Embedding generation
+│   │   └── vector_store.py # Vector store operations
+│   └── evaluation/         # Evaluation framework
+└── templates/              # Web interface templates
+```
+
 ## Usage
+
+### 1. Setting up the Vector Index
+
+First, ingest your documents to create the vector index:
+
+```bash
+python data_ingestion.py update --path /path/to/your/documents
+```
+
+To remove specific vectors from the index:
+```bash
+python data_ingestion.py remove --ids vector_id1 vector_id2
+```
+
+### 2. Deploying the Agent
+
+Deploy the RAG agent to Vertex AI Agent Engine:
+
+```bash
+python deploy_agent.py --staging-bucket gs://your-bucket
+```
+
+### 3. Starting the Web Service
+
+Start the web interface:
+
+```bash
+python web_chatbot.py
+```
+
+The service will be available at `http://localhost:8000`
 
 ## Evaluation
 
-## Updating index
+The system includes an evaluation framework with sample queries in `src/evaluation/sample_queries.json`. These queries can be used to test the system's performance and accuracy.
+
+## Updating Index
+
+The index can be updated in two ways:
+
+1. **Adding Documents**:
+   ```bash
+   python data_ingestion.py update --path /path/to/new/documents
+   ```
+
+2. **Removing Documents**:
+   ```bash
+   python data_ingestion.py remove --ids vector_id1 vector_id2
+   ```
+
+The system supports various document formats:
+- Text files (.txt)
+- PDF documents (.pdf)
+- Word documents (.docx)
+- Markdown files (.md)
+- CSV files (.csv)
+- Images (.png, .jpg, .jpeg)
