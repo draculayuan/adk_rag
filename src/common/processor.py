@@ -25,7 +25,7 @@ class DocumentProcessor:
             raise FileNotFoundError(f"File not found: {file_path}")
             
         chunks_collection = []
-        for root, dirs, files in os.walk(file_root):
+        for root, dirs, files in os.walk(root_path):
             for file in files:
                 file_path = os.path.join(root, file)
                 file_ext = os.path.splitext(file_path)[1].lower()

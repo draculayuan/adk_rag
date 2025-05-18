@@ -111,8 +111,10 @@ class VectorStore:
                 "text": item["text"]
             })
 
-    def delete_vectors(self, vector_ids: List[str]) -> None:
-        self.index.remove_datapoints(ids=vector_ids, namespace="default")
+    def delete_vectors(self, vector_ids: List[str], collection="rag") -> None:
+        self.index.remove_datapoints(datapoint_ids=vector_ids)
+        for idx in vector_ids:
+            self.db.collection(collection).document(idx).delete()
 
     # ─────────────────────────── ANN / SIMILARITY SEARCH ───────────────────────── #
 
