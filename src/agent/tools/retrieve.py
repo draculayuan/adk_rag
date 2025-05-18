@@ -1,11 +1,12 @@
 # agent/tools/retrieve.py
-#from typing import List
-#from agent.common.vector_store import VectorStore
-#from agent.common.embedding_generator import EmbeddingGenerator
+# from typing import List
+# from agent.common.vector_store import VectorStore
+# from agent.common.embedding_generator import EmbeddingGenerator
 
 # Initialize shared utilities
-#_vs = VectorStore()
-#_embedder = EmbeddingGenerator()
+# _vs = VectorStore()
+# _embedder = EmbeddingGenerator()
+
 
 def retrieve_documents(query: str):
     """
@@ -20,18 +21,16 @@ def retrieve_documents(query: str):
     from google.cloud.aiplatform.matching_engine import MatchingEngineIndexEndpoint
     from google.cloud import firestore
     import vertexai
-    
+
     vertexai.init(
         project="yuan-449301",
         location="us-central1",
     )
-    
+
     _embedder = TextEmbeddingModel.from_pretrained("text-embedding-005")
-    _endpoint = MatchingEngineIndexEndpoint(
-        index_endpoint_name="7694472531129925632"
-    )
+    _endpoint = MatchingEngineIndexEndpoint(index_endpoint_name="7694472531129925632")
     _db = firestore.Client()
-    
+
     query_embedding = _embedder.get_embeddings([query])[0].values
     response = _endpoint.find_neighbors(
         deployed_index_id="deployed_index_1747401318896",
@@ -45,9 +44,9 @@ def retrieve_documents(query: str):
         r = _db.collection("rag").document(r).get().to_dict()
         retrieved_results.append(
             {
-                'text': r['text'],
-                'file_name': r['file_name'],
-                'file_path': r['file_path']
+                "text": r["text"],
+                "file_name": r["file_name"],
+                "file_path": r["file_path"],
             }
         )
     return retrieved_results

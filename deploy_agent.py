@@ -5,6 +5,7 @@ import os
 
 from src.agent.agent import rag_agent
 
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Create / update a Vertex AI agent-engine deployment."
@@ -23,6 +24,7 @@ def parse_args() -> argparse.Namespace:
 
     return parser.parse_args()
 
+
 def main():
     args = parse_args()
     vertexai.init(staging_bucket=args.staging_bucket)
@@ -31,12 +33,13 @@ def main():
         agent_engine=rag_agent,
         requirements=[
             "google-cloud-aiplatform[agent_engines,adk,langchain,ag2,llama_index]==1.90.0",
-            "google-cloud-firestore==2.20.2"
+            "google-cloud-firestore==2.20.2",
         ],
-        extra_packages=["src/agent"]
+        extra_packages=["src/agent"],
     )
 
     print(f"Remote agent created: {remote_app.name}")
-    
+
+
 if __name__ == "__main__":
     main()

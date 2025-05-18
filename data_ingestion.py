@@ -25,12 +25,15 @@ def remove_vectors(ids: Sequence[str]) -> None:
     """Delete vectors with the given *ids* from the vector store."""
     vector_store.delete_vectors(list(ids))
 
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Manage your document vector index.")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     # `update` sub-command
-    update_parser = subparsers.add_parser("update", help="Ingest documents and update the index.")
+    update_parser = subparsers.add_parser(
+        "update", help="Ingest documents and update the index."
+    )
     update_parser.add_argument(
         "--path",
         "-p",
@@ -40,7 +43,9 @@ def main() -> None:
     )
 
     # `remove` sub-command
-    remove_parser = subparsers.add_parser("remove", help="Remove vectors from the index.")
+    remove_parser = subparsers.add_parser(
+        "remove", help="Remove vectors from the index."
+    )
     remove_parser.add_argument(
         "--ids",
         "-i",

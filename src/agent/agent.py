@@ -1,5 +1,6 @@
 from google.adk.agents import LlmAgent
-#from vertexai.preview.reasoning_engines import AdkApp
+
+# from vertexai.preview.reasoning_engines import AdkApp
 
 # Import your retrieval tools
 from .tools.retrieve import retrieve_documents
